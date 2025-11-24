@@ -29,123 +29,200 @@ app.get('/', (req, res) => {
 });
 
 // Weather API
+// POST /weather - create new weather entry
+app.post('/weather', async (req, res) => {
+    try {
+    const validation = weatherModel.Validate(req.body)
+    if (!validation.valid) return res.status(400).json({ error: validation.error })
+    const created = await weatherModel.Create(req.body)
+    res.status(201).json(created)
+    } catch (error) {
+        console.error('POST /weather error', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+})
+
 // GET /weather - list all weather entries
-app.get('/weather', (req, res) => {
-    res.json(weatherModel.list())
+app.get('/weather', async (req, res) => {
+    try {
+    const rows = await weatherModel.GetAll()
+    res.json(rows)
+    } catch (error) {
+        console.error('GET /weather error', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 })
 
 // GET /weather/:entryId - get single weather entry
-// `req.params.entryId` contains the path parameter (e.g. for `/weather/42` it's `'42'`).
-app.get('/weather/:entryId', (req, res) => {
-    const entry = weatherModel.get(req.params.entryId)
-    if (!entry) return res.status(404).json({ error: 'Weather entry not found' })
-    res.json(entry)
-})
-
-// POST /weather - create new weather entry
-app.post('/weather', (req, res) => {
-    const validation = weatherModel.validate(req.body)
-    if (!validation.valid) return res.status(400).json({ error: validation.error })
-    const created = weatherModel.create(req.body)
-    res.status(201).json(created)
+app.get('/weather/:entryId', async (req, res) => {
+    try {
+    const existing = await weatherModel.Get(req.params.entryId)
+    if (!existing) return res.status(404).json({ error: 'Weather not found' })
+    res.json(existing)
+    } catch (error) {
+        console.error('GET /weather error', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 })
 
 // PUT /weather/:entryId - update existing weather entry
-app.put('/weather/:entryId', (req, res) => {
-    const existing = weatherModel.get(req.params.entryId)
+app.put('/weather/:entryId', async (req, res) => {
+   try {
+    const existing = await weatherModel.Get(req.params.entryId)
     if (!existing) return res.status(404).json({ error: 'Weather entry not found' })
-    const validation = weatherModel.validate({ name: req.body.name ?? existing.name, description: req.body.description ?? existing.description })
+    const validation = weatherModel.Validate({ name: req.body.name ?? existing.name, description: req.body.description ?? existing.description })
     if (!validation.valid) return res.status(400).json({ error: validation.error })
-    const updated = weatherModel.update(req.params.entryId, req.body)
+    const updated = await weatherModel.Update(req.params.entryId, req.body)
     res.json(updated)
+   } catch (error) {
+        console.error('PUT /weather error', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+   }
 })
 
 // DELETE /weather/:entryId - delete weather entry
-app.delete('/weather/:entryId', (req, res) => {
-    const existing = weatherModel.get(req.params.entryId)
+app.delete('/weather/:entryId', async (req, res) => {
+    try {
+    const existing = await weatherModel.Get(req.params.entryId)
     if (!existing) return res.status(404).json({ error: 'Weather entry not found' })
-    weatherModel.delete(req.params.entryId)
+    await weatherModel.Delete(req.params.entryId)
     res.status(204).end()
+    } catch (error) {
+        console.error('DELETE /weather error', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 })
 
 // Cities API
+// POST /cities - create new city
+app.post('/cities', async (req, res) => {
+
+    try {
+        const validation = await cityModel.Validate(req.body)
+        if (!validation.valid) return res.status(400).json({ error: validation.error })
+        const created = await cityModel.Create(req.body)
+        res.status(201).json(created)
+    } catch (error) {
+        console.error('POST /cities error', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+})
+
 // GET /cities - list all cities
-app.get('/cities', (req, res) => {
-    res.json(cityModel.list())
+app.get('/cities', async (req, res) => {
+
+    try {
+        const rows = await cityModel.GetAll()
+        res.json(rows)
+    } catch (error) {
+        console.error('GET /cities error', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 })
 
 // GET /cities/:cityId - get single city
-// `req.params.cityId` contains the path parameter (e.g. for `/cities/<id>`).
-app.get('/cities/:cityId', (req, res) => {
-    const entry = cityModel.get(req.params.cityId)
-    if (!entry) return res.status(404).json({ error: 'City not found' })
-    res.json(entry)
-})
-
-// POST /cities - create new city
-app.post('/cities', (req, res) => {
-    const validation = cityModel.validate(req.body)
-    if (!validation.valid) return res.status(400).json({ error: validation.error })
-    const created = cityModel.create(req.body)
-    res.status(201).json(created)
+app.get('/cities/:cityId', async (req, res) => {
+    try {
+        const existing = await cityModel.Get(req.params.cityId)
+        if (!existing) return res.status(404).json({ error: 'City not found' })
+        res.json(existing)
+    } catch (error) {
+        console.error('GET /cities error', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 })
 
 // PUT /cities/:cityId - update existing city
-app.put('/cities/:cityId', (req, res) => {
-    const existing = cityModel.get(req.params.cityId)
-    if (!existing) return res.status(404).json({ error: 'City not found' })
-    const validation = cityModel.validate({ name: req.body.name ?? existing.name, country: req.body.country ?? existing.country })
-    if (!validation.valid) return res.status(400).json({ error: validation.error })
-    const updated = cityModel.update(req.params.cityId, req.body)
-    res.json(updated)
+app.put('/cities/:cityId', async (req, res) => {
+    try {
+        const existing = await cityModel.Get(req.params.cityId)
+        if (!existing) return res.status(404).json({ error: 'City not found' })
+        const validation = cityModel.Validate({ name: req.body.name ?? existing.name, country: req.body.country ?? existing.country })
+        if (!validation.valid) return res.status(400).json({ error: validation.error })
+        const updated = await cityModel.Update(req.params.cityId, req.body)
+        res.json(updated)
+    } catch (error) {
+        console.error('PUT /cities error', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 })
 
 // DELETE /cities/:cityId - delete city
-app.delete('/cities/:cityId', (req, res) => {
-    const existing = cityModel.get(req.params.cityId)
+app.delete('/cities/:cityId', async (req, res) => {
+    try {
+    const existing = await cityModel.Get(req.params.cityId)
     if (!existing) return res.status(404).json({ error: 'City not found' })
-    cityModel.delete(req.params.cityId)
+    await cityModel.Delete(req.params.cityId)
     res.status(204).end()
+    } catch (error) {
+        console.error('DELETE /cities error', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 })
 
-// Users API
+// Users API (database-backed)
 // GET /users - list all users
-app.get('/users', (req, res) => {
-    res.json(userModel.list())
+app.get('/users', async (req, res) => {
+    try {
+        const rows = await userModel.GetAll()
+        res.json(rows)
+    } catch (error) {
+        console.error('GET /users error', error)
+        res.status(500).json({ error: 'Internal Server Error' })
+    }
 })
 
 // GET /users/:userId - get single user
-// `req.params.userId` contains the path parameter (e.g. for `/users/<id>`).
-app.get('/users/:userId', (req, res) => {
-    const entry = userModel.get(req.params.userId)
-    if (!entry) return res.status(404).json({ error: 'User not found' })
-    res.json(entry)
+app.get('/users/:userId', async (req, res) => {
+    try {
+        const entry = await userModel.Get(req.params.userId)
+        if (!entry) return res.status(404).json({ error: 'User not found' })
+        res.json(entry)
+    } catch (error) {
+        console.error('GET /users/:userId error', error)
+        res.status(500).json({ error: 'Internal Server Error' })
+    }
 })
 
 // POST /users - create new user
-app.post('/users', (req, res) => {
-    const validation = userModel.validate(req.body)
-    if (!validation.valid) return res.status(400).json({ error: validation.error })
-    const created = userModel.create(req.body)
-    res.status(201).json(created)
+app.post('/users', async (req, res) => {
+    try {
+        const validation = userModel.Validate(req.body)
+        if (!validation.valid) return res.status(400).json({ error: validation.error })
+        const created = await userModel.Create(req.body)
+        res.status(201).json(created)
+    } catch (error) {
+        console.error('POST /users error', error)
+        res.status(500).json({ error: 'Internal Server Error' })
+    }
 })
 
 // PUT /users/:userId - update existing user
-app.put('/users/:userId', (req, res) => {
-    const existing = userModel.get(req.params.userId)
-    if (!existing) return res.status(404).json({ error: 'User not found' })
-    const validation = userModel.validate({ name: req.body.name ?? existing.name, description: req.body.description ?? existing.description })
-    if (!validation.valid) return res.status(400).json({ error: validation.error })
-    const updated = userModel.update(req.params.userId, req.body)
-    res.json(updated)
+app.put('/users/:userId', async (req, res) => {
+    try {
+        const existing = await userModel.Get(req.params.userId)
+        if (!existing) return res.status(404).json({ error: 'User not found' })
+        const validation = userModel.Validate({ name: req.body.name ?? existing.name, description: req.body.description ?? existing.description })
+        if (!validation.valid) return res.status(400).json({ error: validation.error })
+        const updated = await userModel.Update(req.params.userId, req.body)
+        res.json(updated)
+    } catch (error) {
+        console.error('PUT /users/:userId error', error)
+        res.status(500).json({ error: 'Internal Server Error' })
+    }
 })
 
 // DELETE /users/:userId - delete user
-app.delete('/users/:userId', (req, res) => {
-    const existing = userModel.get(req.params.userId)
-    if (!existing) return res.status(404).json({ error: 'User not found' })
-    userModel.delete(req.params.userId)
-    res.status(204).end()
+app.delete('/users/:userId', async (req, res) => {
+    try {
+        const existing = await userModel.Get(req.params.userId)
+        if (!existing) return res.status(404).json({ error: 'User not found' })
+        await userModel.Delete(req.params.userId)
+        res.status(204).end()
+    } catch (error) {
+        console.error('DELETE /users/:userId error', error)
+        res.status(500).json({ error: 'Internal Server Error' })
+    }
 })
 
 module.exports = app

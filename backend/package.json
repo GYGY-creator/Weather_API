@@ -1,12 +1,15 @@
 {
-  "name": "your-project-name", 
+  "name": "your-project-name",
   "version": "1.0.0",
   "scripts": {
     "start": "node app.js",
+    "sync-db": "node scripts/sync-db.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "pg": "^8.16.3",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.7"
   }
 }

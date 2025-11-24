@@ -1,11 +1,30 @@
-const { randomUUID } = require('crypto')
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../_database_connection_test');
 
-class cityModel {
-  constructor() {
-    this.cities = new Map()
-  }
 
-  validate(city) {
+// Define the Sequelize model
+const City = sequelize.define('City', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  country: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+}, {
+  tableName: 'cities',
+  timestamps: true,
+});
+
+module.exports = {
+
+  Validate(city) {
     if (!city) return { valid: false, error: 'City is required' }
     if (!city.name || typeof city.name !== 'string' || city.name.trim() === '') {
       return { valid: false, error: 'Name is required and must be a non-empty string' }
@@ -14,36 +33,35 @@ class cityModel {
       return { valid: false, error: 'Country is required and must be a string' }
     }
     return { valid: true }
-  }
+  },
 
-  create({ name, country }) {
-    const id = randomUUID()
-    const newCity = { id, name, country }
-    this.cities.set(id, newCity)
-    return newCity
-  }
+  async Create({ name, country }) {
+    const newCity = await City.create({ name, country });
+    return newCity;
+  },
 
-  list() {
-    return Array.from(this.cities.values())
-  }
+  async Get(id) {
+    const row = await City.findByPk(id);
+    return row ? row.toJSON() : null;
+  },
 
-  get(id) {
-    return this.cities.get(id) || null
-  }
+  async GetAll(sortBy = 'createdAt', sortOrder = 'DESC') {
+    const rows = await City.findAll({ order: [[sortBy, sortOrder]] })
+    return rows.map(r => r.toJSON())
+  },
 
-  update(id, { name, country }) {
-    const existing = this.cities.get(id)
-    if (!existing) return null
-    const updated = { ...existing }
-    if (name !== undefined) updated.name = name
-    if (country !== undefined) updated.country = country
-    this.cities.set(id, updated)
-    return updated
-  }
+  async Update(id, { name, country }) {
+    const row = await City.findByPk(id);
+    if (!row) return null;
+    if (name !== undefined) row.name = name;
+    if (country !== undefined) row.country = country;
+    await row.save();
+    return row.toJSON();
+  },
 
-  delete(id) {
-    return this.cities.delete(id)
-  }
-}
+  async Delete(id) {
+    return !!(await City.destroy({ where: { id } }))
+  },
 
-module.exports = new cityModel()
+  Model: City,
+};

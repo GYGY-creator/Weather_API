@@ -1,11 +1,30 @@
-const { randomUUID } = require('crypto')
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../_database_connection_test');
 
-class userModel {
-  constructor() {
-    this.users = new Map()
-  }
 
-  validate(user) {
+// Define the Sequelize model
+const User = sequelize.define('User', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  description: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+}, {
+  tableName: 'users',
+  timestamps: true,
+});
+
+module.exports = {
+
+  Validate(user) {
     if (!user) return { valid: false, error: 'User is required' }
     if (!user.name || typeof user.name !== 'string' || user.name.trim() === '') {
       return { valid: false, error: 'Name is required and must be a non-empty string' }
@@ -14,36 +33,35 @@ class userModel {
       return { valid: false, error: 'Description is required and must be a string' }
     }
     return { valid: true }
-  }
+  },
 
-  create({ name, description }) {
-    const id = randomUUID()
-    const newuser = { id, name, description }
-    this.users.set(id, newuser)
-    return newuser
-  }
+  async Create({ name, description }) {
+    const newUser = await User.create({ name, description });
+    return newUser;
+  },
 
-  list() {
-    return Array.from(this.users.values())
-  }
+  async Get(id) {
+    const row = await User.findByPk(id);
+    return row ? row.toJSON() : null;
+  },
 
-  get(id) {
-    return this.users.get(id) || null
-  }
+  async GetAll(sortBy = 'createdAt', sortOrder = 'DESC') {
+    const rows = await User.findAll({ order: [[sortBy, sortOrder]] })
+    return rows.map(r => r.toJSON())
+  },
 
-  update(id, { name, description }) {
-    const existing = this.users.get(id)
-    if (!existing) return null
-    const updated = { ...existing }
-    if (name !== undefined) updated.name = name
-    if (description !== undefined) updated.description = description
-    this.users.set(id, updated)
-    return updated
-  }
+  async Update(id, { name, description }) {
+    const row = await User.findByPk(id);
+    if (!row) return null;
+    if (name !== undefined) row.name = name;
+    if (description !== undefined) row.description = description;
+    await row.save();
+    return row.toJSON();
+  },
 
-  delete(id) {
-    return this.users.delete(id)
-  }
-}
+  async Delete(id) {
+    return !!(await User.destroy({ where: { id } }))
+  },
 
-module.exports = new userModel()
+  Model: User,
+};

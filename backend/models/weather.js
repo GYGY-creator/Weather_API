@@ -1,50 +1,66 @@
-const { randomUUID } = require('crypto')
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../_database_connection_test');
 
-class weatherModel {
-  constructor() {
-    this.weathers = new Map()
-  }
+// Define the Sequelize model
+const Weather = sequelize.define('Weather', {
+  id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
+    primaryKey: true,
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  description: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+}, {
+  tableName: 'weathers',
+  timestamps: true,
+});
 
-  validate(weather) {
-    if (!weather) return { valid: false, error: 'Weather is required' }
-    if (!weather.name || typeof weather.name !== 'string' || weather.name.trim() === '') {
+module.exports = {
+
+  Validate(weathers) {
+    if (!weathers) return { valid: false, error: 'Weather is required' }
+    if (!weathers.name || typeof weathers.name !== 'string' || weathers.name.trim() === '') {
       return { valid: false, error: 'Name is required and must be a non-empty string' }
     }
-    if (!weather.description || typeof weather.description !== 'string') {
+    if (!weathers.description || typeof weathers.description !== 'string') {
       return { valid: false, error: 'Description is required and must be a string' }
     }
     return { valid: true }
-  }
+  },
 
-  // data info weather id, weather name, and weather desc
-  create({ name, description }) {
-    const id = randomUUID()
-    const newweather = { id, name, description }
-    this.weathers.set(id, newweather)
-    return newweather
-  }
+  async Create({ name, description }) {
+    const newWeather = await Weather.create({ name, description });
+    return newWeather;
+  },
 
-  list() {
-    return Array.from(this.weathers.values())
-  }
+  async Get(id) {
+    const row = await Weather.findByPk(id);
+    return row ? row.toJSON() : null;
+  },
 
-  get(id) {
-    return this.weathers.get(id) || null
-  }
+  async GetAll(sortBy = 'createdAt', sortOrder = 'DESC') {
+    const rows = await Weather.findAll({ order: [[sortBy, sortOrder]] })
+    return rows.map(r => r.toJSON())
+  },
 
-  update(id, { name, description }) {
-    const existing = this.weathers.get(id)
-    if (!existing) return null
-    const updated = { ...existing }
-    if (name !== undefined) updated.name = name
-    if (description !== undefined) updated.description = description
-    this.weathers.set(id, updated)
-    return updated
-  }
+  async Update(id, { name, description }) {
+    const row = await Weather.findByPk(id);
+    if (!row) return null;
+    if (name !== undefined) row.name = name;
+    if (description !== undefined) row.description = description;
+    await row.save();
+    return row.toJSON();
+  },
 
-  delete(id) {
-    return this.weathers.delete(id)
-  }
-}
+  async Delete(id) {
+    return !!(await Weather.destroy({ where: { id } }))
+  },
 
-module.exports = new weatherModel()
+  Model: Weather,
+};
