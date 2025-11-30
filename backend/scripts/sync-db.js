@@ -1,4 +1,5 @@
-const { sequelize } = require('../_database_connection_test') //path
+const { sequelize } = require('../models')
+
 require('../models/city') // city model path
 require('../models/user') // user model path
 require('../models/weather') // weather model path

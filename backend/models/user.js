@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../_database_connection_test');
-
+const { sequelize } = require('./index');
 
 // Define the Sequelize model
 const User = sequelize.define('User', {

@@ -5,11 +5,8 @@ const cityModel = require('./models/city')
 const userModel = require('./models/user')
 const PORT = 3001;
 
-// Example middleware: logs request method and URL
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`);
-    next();
-});
+// Add this at the top of app.js after requiring models
+const { sequelize } = require('./models')
 
 // Lightweight CORS middleware so the React dev server (different origin) can call this API
 app.use((req, res, next) => {
