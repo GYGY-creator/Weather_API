@@ -3,10 +3,8 @@ const app = express();
 const weatherModel = require('./models/weather')
 const cityModel = require('./models/city')
 const userModel = require('./models/user')
+const path = require('path')
 const PORT = 3001;
-
-// Add this at the top of app.js after requiring models
-const { sequelize } = require('./models')
 
 // Lightweight CORS middleware so the React dev server (different origin) can call this API
 app.use((req, res, next) => {
@@ -20,50 +18,51 @@ app.use((req, res, next) => {
 // Parse JSON bodies (for POST requests)
 app.use(express.json());
 
+
 // Default page
 app.get('/', (req, res) => {
-    res.send('Welcome to the Weather API!');
+	res.send('Weather API');
 });
 
 // Weather API
 // POST /weather - create new weather entry
-app.post('/weather', async (req, res) => {
+app.post('/weathers', async (req, res) => {
     try {
     const validation = weatherModel.Validate(req.body)
     if (!validation.valid) return res.status(400).json({ error: validation.error })
     const created = await weatherModel.Create(req.body)
     res.status(201).json(created)
     } catch (error) {
-        console.error('POST /weather error', error);
+        console.error('POST /weathers error', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 })
 
-// GET /weather - list all weather entries
-app.get('/weather', async (req, res) => {
+// GET /weathers - list all weather entries
+app.get('/weathers', async (req, res) => {
     try {
     const rows = await weatherModel.GetAll()
     res.json(rows)
     } catch (error) {
-        console.error('GET /weather error', error);
+        console.error('GET /weathers error', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 })
 
-// GET /weather/:entryId - get single weather entry
-app.get('/weather/:entryId', async (req, res) => {
+// GET /weathers/:entryId - get single weather entry
+app.get('/weathers/:entryId', async (req, res) => {
     try {
     const existing = await weatherModel.Get(req.params.entryId)
     if (!existing) return res.status(404).json({ error: 'Weather not found' })
     res.json(existing)
     } catch (error) {
-        console.error('GET /weather error', error);
+        console.error('GET /weathers error', error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 })
 
-// PUT /weather/:entryId - update existing weather entry
-app.put('/weather/:entryId', async (req, res) => {
+// PUT /weathers/:entryId - update existing weather entry
+app.put('/weathers/:entryId', async (req, res) => {
    try {
     const existing = await weatherModel.Get(req.params.entryId)
     if (!existing) return res.status(404).json({ error: 'Weather entry not found' })
@@ -77,8 +76,8 @@ app.put('/weather/:entryId', async (req, res) => {
    }
 })
 
-// DELETE /weather/:entryId - delete weather entry
-app.delete('/weather/:entryId', async (req, res) => {
+// DELETE /weathers/:entryId - delete weather entry
+app.delete('/weathers/:entryId', async (req, res) => {
     try {
     const existing = await weatherModel.Get(req.params.entryId)
     if (!existing) return res.status(404).json({ error: 'Weather entry not found' })

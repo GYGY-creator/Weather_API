@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "scripts": {
     "start": "node app.js",
-    "sync-db": "node scripts/sync-db.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "client:dev": "cd client && npm run dev",
+    "client:build": "cd client && npm run build",
+    "client:preview": "cd client && npm run preview"
   },
   "dependencies": {
     "dotenv": "^17.2.3",
