@@ -1,5 +1,5 @@
-// _smoke_test_weather.js
-// Demo-style smoke test for GET /weather/:city
+// _smoke_test_alerts.js
+// Demo-style smoke test for POST /send-alerts
 // Assumes server is already running at http://localhost:3001
 
 function wait(ms) 
@@ -13,11 +13,11 @@ async function run()
 
     const baseUrl = 'http://localhost:3001';
 
-    console.log('GET /weather/Seattle');
+    console.log('POST /send-alerts');
 
     const response = await fetch(
-        baseUrl + '/weather/Seattle',
-        { method : 'GET' }
+        baseUrl + '/send-alerts',
+        { method : 'POST' }
     );
 
     console.log('status', response.status);

@@ -6,24 +6,9 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=development
-      - DB_HOST=postgres          # ← Add database connection
-      - DB_NAME=weather_api
-      - DB_USER=postgres
-      - DB_PASS=password
-      - DB_PORT=5432
-    depends_on:
-      - postgres                  # ← Wait for database to start
-
-  postgres:                       # ← ADD THIS ENTIRE SERVICE
-    image: postgres:15
-    environment:
-      POSTGRES_DB: weather_api
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:                          # ← ADD THIS TOO
-  postgres_data:
+      # Read from .env file
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_PORT=${DB_PORT}

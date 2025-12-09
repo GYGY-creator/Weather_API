@@ -1,107 +1,177 @@
-import { useState, useEffect } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from "react";
 
-function App() {
-  const [weatherData, setWeatherData] = useState([])
-  const [userData, setUserData] = useState([])
-  const [cityData, setCityData] = useState([])
+/*
+    Simple Frontend UI for Testing Backend API.
+    Contains:
+    - Login form
+    - Register form
+    - Weather lookup form
+*/
 
-  function FetchWeathers() {
-    
-    fetch('http://localhost:3001/weathers')
-      .then(function(response) {
-        return response.json()
-      })
-      .then(function(data) {
-        setWeatherData(data)
-      })
-      .catch(function(error) {
-        console.error('Error fetching weather:', error)
-      })
-  }
+function App()
+{
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
 
-  function FetchUsers() {
-    
-    fetch('http://localhost:3001/users')
-      .then(function(response) {
-        return response.json()
-      })
-      .then(function(data) {
-        setUserData(data)
-      })
-      .catch(function(error) {
-        console.error('Error fetching user:', error)
-      })
-  }
+    const [registerEmail, setRegisterEmail] = useState("");
+    const [weatherCity, setWeatherCity] = useState("");
 
-  function FetchCities() {
-  fetch('http://localhost:3001/cities')
-      .then(function(response) {
-        return response.json()
-      })
-      .then(function(data) {
-        setCityData(data)
-      })
-      .catch(function(error) {
-        console.error('Error fetching city:', error)
-      })
-  }
+    const [output, setOutput] = useState("");
 
-  // Run when component loads
-  useEffect(function() {
-    FetchWeathers()
-  }, [])
+    // --------------------------------------------------------
+    // Helper function to call backend
+    // --------------------------------------------------------
 
-    useEffect(function() {
-    FetchUsers()
-  }, [])
+    async function apiRequest(path, method, body)
+    {
+        const response = await fetch(
+            `http://localhost:3001${path}`,
+            {
+                method : method,
+                headers : 
+                {
+                    "Content-Type" : "application/json"
+                },
+                body : JSON.stringify(body)
+            }
+        );
 
-    useEffect(function() {
-    FetchCities()
-  }, [])
+        const data = await response.json();
+        setOutput(JSON.stringify(data, null, 2));
+    }
 
-  // Click handler
-  function RefreshWeather() {
-    FetchWeathers()
-  }
+    // --------------------------------------------------------
+    // Event Handlers
+    // --------------------------------------------------------
 
-   function RefreshUsers() {
-    FetchUsers()
-  }
+    async function handleLogin(e)
+    {
+        e.preventDefault();
 
-   function RefreshCities() {
-    FetchCities()
-  }
+        await apiRequest(
+            "/login",
+            "POST",
+            {
+                username : username,
+                password : password
+            }
+        );
+    }
 
-  return (
-    <div>
-      <h1>Weather App</h1>
-      
-      <ul>
-          {weatherData.map(function(weather) {
-            return <li key={weather.id}>{weather.name}: {weather.description}</li>
-          })}
-        </ul>
+    async function handleRegister(e)
+    {
+        e.preventDefault();
 
-      <ul>
-          {userData.map(function(user) {
-            return <li key={user.id}>{user.name}: {user.email}</li>
-          })}
-        </ul>
+        await apiRequest(
+            "/register",
+            "POST",
+            {
+                username : username,
+                password : password,
+                email    : registerEmail
+            }
+        );
+    }
 
-      <ul>
-          {cityData.map(function(city) {
-            return <li key={city.id}>{city.name}: {city.description}</li>
-          })}
-        </ul>
-      
-      <button onClick={RefreshWeather}>Refresh Weather</button>
-      <button onClick={RefreshUsers}>Refresh Users</button>
-      <button onClick={RefreshCities}>Refresh Cities</button>
-    </div>
-  )
+    async function handleGetWeather(e)
+    {
+        e.preventDefault();
+
+        const response = await fetch(
+            `http://localhost:3001/weather/${weatherCity}`
+        );
+
+        const data = await response.json();
+        setOutput(JSON.stringify(data, null, 2));
+    }
+
+    // --------------------------------------------------------
+    // Render UI
+    // --------------------------------------------------------
+
+    return (
+        <div style={{ padding : "20px", fontFamily : "Arial" }}>
+            <h1>Weather App Demo UI</h1>
+
+            {/* Login Form */}
+            <h2>Login</h2>
+            <form onSubmit={handleLogin}>
+                <input 
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                />
+                <br />
+                <input 
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                />
+                <br />
+                <button type="submit">Login</button>
+            </form>
+
+            <hr />
+
+            {/* Register Form */}
+            <h2>Register</h2>
+            <form onSubmit={handleRegister}>
+                <input 
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                />
+                <br />
+                <input 
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                />
+                <br />
+                <input 
+                    type="email"
+                    placeholder="Email"
+                    value={registerEmail}
+                    onChange={e => setRegisterEmail(e.target.value)}
+                />
+                <br />
+                <button type="submit">Register</button>
+            </form>
+
+            <hr />
+
+            {/* Weather Form */}
+            <h2>Get Weather</h2>
+            <form onSubmit={handleGetWeather}>
+                <input 
+                    type="text"
+                    placeholder="City (Seattle)"
+                    value={weatherCity}
+                    onChange={e => setWeatherCity(e.target.value)}
+                />
+                <br />
+                <button type="submit">Get Forecast</button>
+            </form>
+
+            <hr />
+
+            {/* Output */}
+            <h2>Response Output</h2>
+            <pre style={{
+                background : "#eee",
+                padding : "10px",
+                borderRadius : "5px",
+                minHeight : "150px"
+            }}>
+                {output}
+            </pre>
+        </div>
+    );
 }
 
-export default App
+export default App;
+
