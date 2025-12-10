@@ -13,23 +13,25 @@ async function GetForecast(req, res)
     {
         const cityName = req.params.city;
 
+        if (!cityName)
+        {
+            return res.status(400).json({ error: 'City name is required.' });
+        }
+
         // Lookup city from DB
         const city = await cityModel.Model.findOne({ where: { name: cityName } });
         if (!city) {
             return res.status(400).json({ error: 'City not found in database.' });
         }
 
-        const office = city.office;
-        const gridX  = city.gridX;
-        const gridY  = city.gridY;
-
-        const requestUrl = 
-            `https://api.weather.gov/gridpoints/${office}/${gridX},${gridY}/forecast`;
+        const lat = city.latitude;
+        const lon = city.longitude;
+        const pointURL = `https://api.weather.gov/points/${lat},${lon}`;
 
         // Fetch forecast data using native Node.js fetch
-        const response = await fetch(requestUrl);
+        const pointResponse = await fetch(pointURL);
 
-        if (!response.ok)
+        if (!pointResponse.ok)
         {
             return res.status(500).json(
             {
@@ -37,18 +39,32 @@ async function GetForecast(req, res)
             });
         }
 
-        const data = await response.json();
+        const pointData = await pointResponse.json();
+        
+        // Extract grid info
+        const office = pointData.properties.gridId;
+        const gridX = pointData.properties.gridX;
+        const gridY = pointData.properties.gridY;
 
-        const todayForecast = data
-            ?.properties
-            ?.periods
-            ?.[0];
+        // Fetch the forecast
+        const forecastUrl = pointData.properties.forecast;
+        const forecastResponse = await fetch(forecastUrl);
+        const forecastData = await forecastResponse.json();
+
+        // Extract the first day's forecast
+        const today = forecastData.properties.periods[0];
 
         return res.status(200).json(
-        { 
-            city     : cityName, 
-            forecast : todayForecast 
+        {
+            city      : cityName,
+            latitude  : lat,
+            longitude : lon,
+            office    : office,
+            gridX     : gridX,
+            gridY     : gridY,
+            forecast  : today
         });
+
     } 
     catch (error) 
     {

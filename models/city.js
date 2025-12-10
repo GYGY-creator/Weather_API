@@ -1,14 +1,24 @@
-const { DataTypes } = require('sequelize');
+const { DataTypes, Sequelize } = require('sequelize');
 const { sequelize } = require('./index');
 
 // Define the Sequelize model
 const City = sequelize.define('City', {
-  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+  id: { type: DataTypes.UUID, defaultValue: Sequelize.literal('uuid_generate_v4()'), primaryKey: true },
   name: { type: DataTypes.STRING, allowNull: false },
   country: { type: DataTypes.STRING, allowNull: false },
-  office: { type: DataTypes.STRING, allowNull: true },
-  gridX: { type: DataTypes.INTEGER, allowNull: true },
-  gridY: { type: DataTypes.INTEGER, allowNull: true },
+  latitude: { type: DataTypes.FLOAT, allowNull: false },
+  longitude: { type: DataTypes.FLOAT, allowNull: false },
+  
+  createdAt: {
+  type: DataTypes.DATE,
+  allowNull: false,
+  defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+},
+updatedAt: {
+  type: DataTypes.DATE,
+  allowNull: false,
+  defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+}
 }, {
   tableName: 'cities',
   timestamps: true,
@@ -62,3 +72,4 @@ module.exports = {
 
   Model: City,
 };
+

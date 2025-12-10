@@ -24,11 +24,7 @@ function App()
 
     async function apiRequest(path, method, body)
     {
-        const response = await fetch(
-            `http://localhost:3001${path}`,
-            {
-                method : method,
-                headers : 
+        const response = await fetch(`http://localhost:3001${path}`, {method : method, headers : 
                 {
                     "Content-Type" : "application/json"
                 },
@@ -47,30 +43,13 @@ function App()
     async function handleLogin(e)
     {
         e.preventDefault();
-
-        await apiRequest(
-            "/login",
-            "POST",
-            {
-                username : username,
-                password : password
-            }
-        );
+        await apiRequest("/login", "POST", {username : username, password : password});
     }
 
     async function handleRegister(e)
     {
         e.preventDefault();
-
-        await apiRequest(
-            "/register",
-            "POST",
-            {
-                username : username,
-                password : password,
-                email    : registerEmail
-            }
-        );
+        await apiRequest("/register", "POST", { username : username, password : password, email    : registerEmail });
     }
 
     async function handleGetWeather(e)
