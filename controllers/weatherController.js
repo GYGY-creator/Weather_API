@@ -1,30 +1,27 @@
 // controllers/weatherController.js
 
 // Import required modules
-const cityCoordinates = require('../models/city_coords');
+const cityModel = require('../models/city');
 
 /*
     Method: GetForecast
     Purpose: Retrieve weather forecast for a given city using native fetch().
 */
-async function GetForecast(req, res) 
+async function GetForecast(req, res)
 {
     try 
     {
         const cityName = req.params.city;
 
-        // Validate city
-        if (!cityName || !cityCoordinates[cityName]) 
-        {
-            return res.status(400).json(
-            {
-                error : 'Unsupported or missing city name.'
-            });
+        // Lookup city from DB
+        const city = await cityModel.Model.findOne({ where: { name: cityName } });
+        if (!city) {
+            return res.status(400).json({ error: 'City not found in database.' });
         }
 
-        const office = cityCoordinates[cityName].office;
-        const gridX  = cityCoordinates[cityName].gridX;
-        const gridY  = cityCoordinates[cityName].gridY;
+        const office = city.office;
+        const gridX  = city.gridX;
+        const gridY  = city.gridY;
 
         const requestUrl = 
             `https://api.weather.gov/gridpoints/${office}/${gridX},${gridY}/forecast`;

@@ -4,11 +4,6 @@ const app = express();
 const path = require('path');
 const PORT = 3001;
 
-// Controllers
-const userController = require('./controllers/userController');
-const weatherController = require('./controllers/weatherController');
-const alertController = require('./controllers/alertController');
-
 // CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -21,11 +16,16 @@ app.use((req, res, next) => {
 // JSON parser
 app.use(express.json());
 
+// Controllers
+const userController = require('./controllers/userController');
+const weatherController = require('./controllers/weatherController');
+//const alertController = require('./controllers/alertController');
+
 // router → controller mapping
 app.post('/register', userController.Register);
 app.post('/login', userController.Login);
 app.get('/weather/:city', weatherController.GetForecast);
-app.post('/send-alerts', alertController.SendAlerts);
+//app.post('/send-alerts', alertController.SendAlerts);
 
 // Serve frontend
 app.use(express.static(path.join(__dirname, 'client/dist')));
