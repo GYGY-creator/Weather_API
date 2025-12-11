@@ -1,9 +1,6 @@
 const { Sequelize } = require('sequelize');
-const path = require('path');
-
-// Load environment variables from backend/.env (use __dirname so loading is deterministic
-// regardless of where the process was started from)
-require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') })
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "..", ".env") });
 
 const DB_URL = process.env.DATABASE_URL
 

@@ -23,12 +23,50 @@ async function Register(req, res)
         const address  = req.body.address || null;
 
         // Validate input
-        if (!username || !password)
+        if (!username || !password || !email)
         {
-            return res.status(400).json(
-            {
-                error : 'Username and password are required.'
+            return res.status(400).json({
+                error : 'Username, password, and email are required.'
             });
+        }
+
+        // Username exists?
+        const existingUsername = await UserModel.Model.findOne({
+            where : { username : username }
+        });
+
+        if (existingUsername)
+        {
+            return res.status(409).json({
+                error : "Username already exists."
+            });
+        }
+
+        // Email exists?
+        const existingEmail = await UserModel.Model.findOne({
+            where : { email : email }
+        });
+
+        if (existingEmail)
+        {
+            return res.status(409).json({
+                error : "Email is already registered."
+            });
+        }
+
+        // Phone exists? (optional)
+        if (phone)
+        {
+            const existingPhone = await UserModel.Model.findOne({
+                where : { phone : phone }
+            });
+
+            if (existingPhone)
+            {
+                return res.status(409).json({
+                    error : "Phone number is already registered."
+                });
+            }
         }
 
         // Hash raw password
@@ -98,17 +136,36 @@ async function Login(req, res)
             });
         }
 
-        // Successful login
-        return res.status(200).json(
-        {
-            message : 'Login successful.',
-            user : 
-            {
-                id       : user.id,
-                username : user.username,
-                email    : user.email
+        // Load RSA private key
+        const fs = require('fs');
+        const jwt = require('jsonwebtoken');
+        const privateKey = fs.readFileSync(process.env.PRIVATE_KEY_PATH, 'utf8');
+
+        // Build JWT payload from database user info
+        const payload = {
+            sub: user.id,
+            name: user.username,
+            role: user.role
+        };
+
+        // Create RSA-signed JWT
+        const token = jwt.sign(payload, privateKey, {
+            algorithm: 'RS256',
+            expiresIn: process.env.JWT_EXPIRES_IN || '1h'
+        });
+
+        // Successful login response
+        return res.status(200).json({
+            message: "Login successful.",
+            token: token,
+            user: {
+                id: user.id,
+                username: user.username,
+                role: user.role,
+                email: user.email
             }
         });
+
     }
     catch (error)
     {
@@ -119,6 +176,14 @@ async function Login(req, res)
         });
     }
 }
+
+// to do GetProfile
+
+
+// to do UpdateProfile
+
+
+// to do ChangePassword
 
 module.exports = 
 {

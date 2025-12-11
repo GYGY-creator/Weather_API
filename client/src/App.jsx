@@ -1,92 +1,111 @@
 import { useState } from "react";
-
-/*
-    Simple Frontend UI for Testing Backend API.
-    Contains:
-    - Login form
-    - Register form
-    - Weather lookup form
-*/
+import AdminPanel from "./AdminPanel.jsx";
 
 function App()
 {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-
+    // REGISTER fields
+    const [usernameRegister, setUsernameRegister] = useState("");
+    const [passwordRegister, setPasswordRegister] = useState("");
     const [registerEmail, setRegisterEmail] = useState("");
+
+    // LOGIN fields
+    const [usernameLogin, setUsernameLogin] = useState("");
+    const [passwordLogin, setPasswordLogin] = useState("");
+
+    // WEATHER
     const [weatherCity, setWeatherCity] = useState("");
 
+    // OUTPUT
     const [output, setOutput] = useState("");
 
-    // --------------------------------------------------------
-    // Helper function to call backend
-    // --------------------------------------------------------
+    // BACKEND URL
+    const backendURL = `http://localhost:5001`;
 
+    // PAGE VIEW (home or admin)
+    const [view, setView] = useState("home");
+
+    // Helper for backend requests
     async function apiRequest(path, method, body)
     {
-        const response = await fetch(`http://localhost:3001${path}`, {method : method, headers : 
-                {
-                    "Content-Type" : "application/json"
-                },
-                body : JSON.stringify(body)
-            }
-        );
+        const response = await fetch(`${backendURL}${path}`,
+        {
+            method : method,
+            headers : { "Content-Type" : "application/json" },
+            body : JSON.stringify(body)
+        });
 
         const data = await response.json();
         setOutput(JSON.stringify(data, null, 2));
     }
 
-    // --------------------------------------------------------
     // Event Handlers
-    // --------------------------------------------------------
 
     async function handleLogin(e)
     {
         e.preventDefault();
-        await apiRequest("/login", "POST", {username : username, password : password});
+        await apiRequest("/login", "POST", 
+        {
+            username : usernameLogin,
+            password : passwordLogin
+        });
     }
 
     async function handleRegister(e)
     {
         e.preventDefault();
-        await apiRequest("/register", "POST", { username : username, password : password, email    : registerEmail });
+        await apiRequest("/register", "POST", 
+        {
+            username : usernameRegister,
+            password : passwordRegister,
+            email    : registerEmail
+        });
     }
 
     async function handleGetWeather(e)
     {
         e.preventDefault();
 
-        const response = await fetch(
-            `http://localhost:3001/weather/${weatherCity}`
-        );
-
+        const response = await fetch(`${backendURL}/weather/${weatherCity}`);
         const data = await response.json();
         setOutput(JSON.stringify(data, null, 2));
     }
 
-    // --------------------------------------------------------
-    // Render UI
-    // --------------------------------------------------------
+    // If Admin view → show AdminPanel only
+    if (view === "admin")
+    {
+        return (
+            <div style={{ padding: "20px" }}>
+                <button onClick={() => setView("home")}>← Back to Home</button>
+                <AdminPanel />
+            </div>
+        );
+    }
 
+    // Otherwise show HOME view
     return (
         <div style={{ padding : "20px", fontFamily : "Arial" }}>
             <h1>Weather App Demo UI</h1>
 
-            {/* Login Form */}
+            {/* NAVIGATION */}
+            <div style={{ marginBottom: "20px" }}>
+                <button onClick={() => setView("admin")}>Go to Admin Panel</button>
+            </div>
+
+            {/* LOGIN */}
             <h2>Login</h2>
             <form onSubmit={handleLogin}>
                 <input 
                     type="text"
                     placeholder="Username"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
+                    value={usernameLogin}
+                    onChange={e => setUsernameLogin(e.target.value)}
                 />
                 <br />
                 <input 
                     type="password"
                     placeholder="Password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
+                    value={passwordLogin}
+                    onChange={e => setPasswordLogin(e.target.value)}
                 />
                 <br />
                 <button type="submit">Login</button>
@@ -94,21 +113,21 @@ function App()
 
             <hr />
 
-            {/* Register Form */}
+            {/* REGISTER */}
             <h2>Register</h2>
             <form onSubmit={handleRegister}>
                 <input 
                     type="text"
                     placeholder="Username"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
+                    value={usernameRegister}
+                    onChange={e => setUsernameRegister(e.target.value)}
                 />
                 <br />
                 <input 
                     type="password"
                     placeholder="Password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
+                    value={passwordRegister}
+                    onChange={e => setPasswordRegister(e.target.value)}
                 />
                 <br />
                 <input 
@@ -123,12 +142,12 @@ function App()
 
             <hr />
 
-            {/* Weather Form */}
+            {/* WEATHER */}
             <h2>Get Weather</h2>
             <form onSubmit={handleGetWeather}>
                 <input 
                     type="text"
-                    placeholder="City (Seattle)"
+                    placeholder="City"
                     value={weatherCity}
                     onChange={e => setWeatherCity(e.target.value)}
                 />
@@ -138,7 +157,7 @@ function App()
 
             <hr />
 
-            {/* Output */}
+            {/* OUTPUT */}
             <h2>Response Output</h2>
             <pre style={{
                 background : "#eee",
@@ -153,4 +172,5 @@ function App()
 }
 
 export default App;
+
 

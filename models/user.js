@@ -1,10 +1,10 @@
-const { DataTypes } = require('sequelize');
+const { DataTypes, Sequelize } = require('sequelize');
 const { sequelize } = require('./index');
 
 const User = sequelize.define('User', {
   id: {
     type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
+    defaultValue: Sequelize.literal('uuid_generate_v4()'),
     primaryKey: true,
   },
   username: {
@@ -13,6 +13,14 @@ const User = sequelize.define('User', {
     unique: true,
     validate: {
       notEmpty: true,
+    },
+  },
+  role: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "user",
+    validate: {
+        isIn: [["user", "admin", "superadmin"]],
     },
   },
   password_hash: {
@@ -33,6 +41,19 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+
+  createdAt: {
+    type: DataTypes.DATE,
+    allowNull: false, 
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+  },
+
+  updatedAt: {
+    type: DataTypes.DATE,
+    allowNull: false, 
+    defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+  }
+
 }, {
   tableName: 'users',
   timestamps: true,
@@ -60,6 +81,12 @@ module.exports = {
     }
     if (!user.password_hash) {
       return { valid: false, error: 'Password hash is required' };
+    }
+    if (user.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+      return { valid: false, error: 'Invalid email format' };
+    }
+    if (user.role && !["user", "admin", "superadmin"].includes(user.role)) {
+      return { valid: false, error: 'Invalid role' };
     }
     return { valid: true };
   },
@@ -89,10 +116,12 @@ module.exports = {
     if (updates.username !== undefined) row.username = updates.username;
     if (updates.password_hash !== undefined) row.password_hash = updates.password_hash;
     if (updates.email !== undefined) row.email = updates.email;
+    if (updates.role !== undefined) row.role = updates.role;
 
     await row.save();
     return row.toJSON();
   },
+
 
   async Delete(id) {
     return !!(await User.destroy({ where: { id } }));

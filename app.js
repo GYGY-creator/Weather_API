@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
+const { RequireLogin, RequireRole } = require('./middleware/auth');
 const app = express();
 
 const path = require('path');
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // CORS
 app.use((req, res, next) => {
@@ -17,15 +19,44 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 // Controllers
-const userController = require('./controllers/userController');
 const weatherController = require('./controllers/weatherController');
-//const alertController = require('./controllers/alertController');
+const userController = require('./controllers/userController');
+const adminController = require('./controllers/adminController');
 
 // router → controller mapping
 app.post('/register', userController.Register);
 app.post('/login', userController.Login);
 app.get('/weather/:city', weatherController.GetForecast);
-//app.post('/send-alerts', alertController.SendAlerts);
+
+// admin routes
+// ADMIN ROUTES (all require login + admin)
+app.use("/admin", RequireLogin, RequireRole("admin"));
+
+// list users
+app.get("/admin/users", adminController.ListUsers);
+
+// get single user
+app.get("/admin/users/:id", adminController.GetUser);
+
+// update user
+app.put("/admin/users/:id", adminController.UpdateUser);
+
+// delete user
+app.delete("/admin/users/:id", adminController.DeleteUser);
+
+// promote (superadmin only)
+app.post(
+    "/admin/users/:id/promote",
+    RequireRole("superadmin"),
+    adminController.PromoteUserToAdmin
+);
+
+// demote (superadmin only)
+app.post(
+    "/admin/users/:id/demote",
+    RequireRole("superadmin"),
+    adminController.DemoteAdminToUser
+);
 
 // Serve frontend
 app.use(express.static(path.join(__dirname, 'client/dist')));
