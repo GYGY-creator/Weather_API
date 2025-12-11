@@ -8,7 +8,7 @@ async function ListUsers(req, res)
     try
     {
         const users = await UserModel.GetAll();
-        return res.json(users);
+        return res.json({ users: users });
     }
     catch (error)
     {

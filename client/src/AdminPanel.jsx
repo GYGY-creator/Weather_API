@@ -1,82 +1,76 @@
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 
-export default function AdminPanel() 
-{
-    const [users, setUsers] = useState([]);
-    const token = localStorage.getItem("jwt");
+function AdminPanel() {
+    const [users, setUsers] = useState([]);  // <-- FIX: start with empty array
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Load all users
-    useEffect(() => 
-    {
-        fetch("http://localhost:5001/admin/users", {
-            headers: {
-                "Authorization": "Bearer " + token
+    const token = localStorage.getItem("token");
+
+    useEffect(() => {
+        async function fetchUsers() {
+            try {
+                const response = await fetch("/admin/users", {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    setError(data.error || "Failed to load users.");
+                    return;
+                }
+
+                setUsers(data.users || []);
+            } catch (err) {
+                setError("Network error");
+            } finally {
+                setLoading(false);
             }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.users) setUsers(data.users);
-        });
-    }, []);
+        }
 
-    // Promote user
-    function promote(id) {
-        fetch(`http://localhost:5001/admin/users/${id}/promote`, {
-            method: "POST",
-            headers: { "Authorization": "Bearer " + token }
-        })
-        .then(() => window.location.reload());
-    }
+        fetchUsers();
+    }, [token]);
 
-    // Demote user
-    function demote(id) {
-        fetch(`http://localhost:5001/admin/users/${id}/demote`, {
-            method: "POST",
-            headers: { "Authorization": "Bearer " + token }
-        })
-        .then(() => window.location.reload());
-    }
-
-    // Delete user
-    function remove(id) {
-        fetch(`http://localhost:5001/admin/users/${id}`, {
-            method: "DELETE",
-            headers: { "Authorization": "Bearer " + token }
-        })
-        .then(() => window.location.reload());
-    }
+    if (loading) return <p>Loading users...</p>;
+    if (error) return <p style={{ color: "red" }}>{error}</p>;
 
     return (
         <div>
-            <h1>Admin Panel</h1>
+            <h2>Admin Panel</h2>
 
-            <table border="1" cellPadding="8">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {users.map(u => (
-                        <tr key={u.id}>
-                            <td>{u.id}</td>
-                            <td>{u.username}</td>
-                            <td>{u.email}</td>
-                            <td>{u.role}</td>
-                            <td>
-                                <button onClick={() => promote(u.id)}>Promote</button>
-                                <button onClick={() => demote(u.id)}>Demote</button>
-                                <button onClick={() => remove(u.id)}>Delete</button>
-                            </td>
+            {users.length === 0 ? (
+                <p>No users found.</p>
+            ) : (
+                <table border="1" cellPadding="6">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+
+                        {/* SAFE: users is always an array now */}
+                        {users.map((user) => (
+                            <tr key={user.id}>
+                                <td>{user.id}</td>
+                                <td>{user.username}</td>
+                                <td>{user.email}</td>
+                                <td>{user.role}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
         </div>
     );
 }
+
+export default AdminPanel;
+
+

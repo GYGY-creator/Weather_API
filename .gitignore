@@ -56,3 +56,7 @@ jspm_packages/
 
 # VS Code settings
 .vscode/
+
+#key files
+*.pem
+*.key

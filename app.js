@@ -4,7 +4,7 @@ const { RequireLogin, RequireRole } = require('./middleware/auth');
 const app = express();
 
 const path = require('path');
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5001;
 
 // CORS
 app.use((req, res, next) => {
@@ -68,7 +68,7 @@ app.get('/', (req, res) => {
 module.exports = app;
 
 if (require.main === module) {
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
         console.log(`Express server running at http://localhost:${PORT}`);
     });
 }

@@ -1,176 +1,214 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import AdminPanel from "./AdminPanel.jsx";
 
-function App()
-{
-    // REGISTER fields
-    const [usernameRegister, setUsernameRegister] = useState("");
-    const [passwordRegister, setPasswordRegister] = useState("");
+function App() 
+{   
+    // local
+    // const API_BASE = "http://localhost:5001";
+
+    const API_BASE = "http://3.143.143.205:5001";
+
+    // Local component state
+    const [registerUsername, setRegisterUsername] = useState("");
+    const [registerPassword, setRegisterPassword] = useState("");
     const [registerEmail, setRegisterEmail] = useState("");
 
-    // LOGIN fields
-    const [usernameLogin, setUsernameLogin] = useState("");
-    const [passwordLogin, setPasswordLogin] = useState("");
+    const [loginUsername, setLoginUsername] = useState("");
+    const [loginPassword, setLoginPassword] = useState("");
 
-    // WEATHER
     const [weatherCity, setWeatherCity] = useState("");
+    const [weatherOutput, setWeatherOutput] = useState("");
 
-    // OUTPUT
-    const [output, setOutput] = useState("");
+    const [currentUser, setCurrentUser] = useState(null);
 
-    // BACKEND URL
-    const backendURL = `http://localhost:5001`;
-
-    // PAGE VIEW (home or admin)
-    const [view, setView] = useState("home");
-
-    // Helper for backend requests
-    async function apiRequest(path, method, body)
+    /*
+        Method: Register
+        Purpose: Register a new user account.
+    */
+    async function Register(event) 
     {
-        const response = await fetch(`${backendURL}${path}`,
+        event.preventDefault();
+
+        const response = await fetch(API_BASE + "/register",
         {
-            method : method,
+            method : "POST",
             headers : { "Content-Type" : "application/json" },
-            body : JSON.stringify(body)
+            body : JSON.stringify(
+            {
+                username : registerUsername,
+                password : registerPassword,
+                email    : registerEmail
+            })
         });
 
         const data = await response.json();
-        setOutput(JSON.stringify(data, null, 2));
-    }
 
-    // Event Handlers
-
-    async function handleLogin(e)
-    {
-        e.preventDefault();
-        await apiRequest("/login", "POST", 
+        if (response.ok) 
         {
-            username : usernameLogin,
-            password : passwordLogin
-        });
-    }
-
-    async function handleRegister(e)
-    {
-        e.preventDefault();
-        await apiRequest("/register", "POST", 
+            alert("Registration successful!");
+        }
+        else 
         {
-            username : usernameRegister,
-            password : passwordRegister,
-            email    : registerEmail
-        });
+            alert(data.error);
+        }
     }
 
-    async function handleGetWeather(e)
+    /*
+        Method: Login
+        Purpose: Authenticate user and store JWT locally.
+    */
+    async function Login(event)
     {
-        e.preventDefault();
+        event.preventDefault();
 
-        const response = await fetch(`${backendURL}/weather/${weatherCity}`);
+        const response = await fetch(API_BASE + "/login",
+        {
+            method : "POST",
+            headers : { "Content-Type" : "application/json" },
+            body : JSON.stringify(
+            {
+                username : loginUsername,
+                password : loginPassword
+            })
+        });
+
         const data = await response.json();
-        setOutput(JSON.stringify(data, null, 2));
+
+        if (response.ok) 
+        {
+            // Save JWT
+            localStorage.setItem("token", data.token);
+
+            // Save user info in state
+            setCurrentUser(
+            {
+                id       : data.user.id,
+                username : data.user.username,
+                role     : data.user.role
+            });
+
+            alert("Login successful!");
+        } 
+        else 
+        {
+            alert(data.error);
+        }
     }
 
-    // If Admin view → show AdminPanel only
-    if (view === "admin")
+    /*
+        Method: GetWeather
+        Purpose: Get weather forecast for a city.
+    */
+    async function GetWeather(event)
     {
-        return (
-            <div style={{ padding: "20px" }}>
-                <button onClick={() => setView("home")}>← Back to Home</button>
-                <AdminPanel />
-            </div>
-        );
+        event.preventDefault();
+
+        const response = await fetch(API_BASE + "/weather/" + weatherCity);
+        const data = await response.json();
+
+        if (response.ok) 
+        {
+            setWeatherOutput(JSON.stringify(data, null, 2));
+        }
+        else 
+        {
+            alert(data.error);
+        }
     }
 
-    // Otherwise show HOME view
+    /*
+        Method: Logout
+        Purpose: Clear JWT + user state.
+    */
+    function Logout()
+    {
+        localStorage.removeItem("token");
+        setCurrentUser(null);
+    }
+
     return (
-        <div style={{ padding : "20px", fontFamily : "Arial" }}>
-            <h1>Weather App Demo UI</h1>
+        <div style={{ padding: "20px" }}>
+            <h1>Weather App</h1>
 
-            {/* NAVIGATION */}
-            <div style={{ marginBottom: "20px" }}>
-                <button onClick={() => setView("admin")}>Go to Admin Panel</button>
-            </div>
-
-            {/* LOGIN */}
+            {/* Login Section */}
             <h2>Login</h2>
-            <form onSubmit={handleLogin}>
-                <input 
-                    type="text"
-                    placeholder="Username"
-                    value={usernameLogin}
-                    onChange={e => setUsernameLogin(e.target.value)}
-                />
-                <br />
-                <input 
-                    type="password"
-                    placeholder="Password"
-                    value={passwordLogin}
-                    onChange={e => setPasswordLogin(e.target.value)}
-                />
-                <br />
+            <form onSubmit={Login}>
+                <input type="text"
+                       placeholder="Username"
+                       value={loginUsername}
+                       onChange={(e) => setLoginUsername(e.target.value)}
+                       required />
+
+                <input type="password"
+                       placeholder="Password"
+                       value={loginPassword}
+                       onChange={(e) => setLoginPassword(e.target.value)}
+                       required />
+
                 <button type="submit">Login</button>
             </form>
 
+            {/* Show logout + user info */}
+            {currentUser && (
+                <div>
+                    <p>Logged in as: {currentUser.username} ({currentUser.role})</p>
+                    <button onClick={Logout}>Logout</button>
+                </div>
+            )}
+
             <hr />
 
-            {/* REGISTER */}
+            {/* Registration Section */}
             <h2>Register</h2>
-            <form onSubmit={handleRegister}>
-                <input 
-                    type="text"
-                    placeholder="Username"
-                    value={usernameRegister}
-                    onChange={e => setUsernameRegister(e.target.value)}
-                />
-                <br />
-                <input 
-                    type="password"
-                    placeholder="Password"
-                    value={passwordRegister}
-                    onChange={e => setPasswordRegister(e.target.value)}
-                />
-                <br />
-                <input 
-                    type="email"
-                    placeholder="Email"
-                    value={registerEmail}
-                    onChange={e => setRegisterEmail(e.target.value)}
-                />
-                <br />
+            <form onSubmit={Register}>
+                <input type="text"
+                       placeholder="Username"
+                       value={registerUsername}
+                       onChange={(e) => setRegisterUsername(e.target.value)}
+                       required />
+
+                <input type="password"
+                       placeholder="Password"
+                       value={registerPassword}
+                       onChange={(e) => setRegisterPassword(e.target.value)}
+                       required />
+
+                <input type="email"
+                       placeholder="Email"
+                       value={registerEmail}
+                       onChange={(e) => setRegisterEmail(e.target.value)}
+                       required />
+
                 <button type="submit">Register</button>
             </form>
 
             <hr />
 
-            {/* WEATHER */}
-            <h2>Get Weather</h2>
-            <form onSubmit={handleGetWeather}>
-                <input 
-                    type="text"
-                    placeholder="City"
-                    value={weatherCity}
-                    onChange={e => setWeatherCity(e.target.value)}
-                />
-                <br />
-                <button type="submit">Get Forecast</button>
+            {/* Weather Lookup */}
+            <h2>Weather Lookup</h2>
+            <form onSubmit={GetWeather}>
+                <input type="text"
+                       placeholder="City (e.g. Seattle)"
+                       value={weatherCity}
+                       onChange={(e) => setWeatherCity(e.target.value)}
+                       required />
+
+                <button type="submit">Get Weather</button>
             </form>
+
+            <pre>{weatherOutput}</pre>
 
             <hr />
 
-            {/* OUTPUT */}
-            <h2>Response Output</h2>
-            <pre style={{
-                background : "#eee",
-                padding : "10px",
-                borderRadius : "5px",
-                minHeight : "150px"
-            }}>
-                {output}
-            </pre>
+            {/* ADMIN PANEL DISPLAY (superadmin OR admin) */}
+            {currentUser && (currentUser.role === "admin" || currentUser.role === "superadmin") && (
+                <div>
+                    <h2>Admin Panel</h2>
+                    <AdminPanel/>
+                </div>
+            )}
         </div>
     );
 }
 
 export default App;
-
-
