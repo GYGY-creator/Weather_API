@@ -4,8 +4,9 @@ import AdminPanel from "./AdminPanel.jsx";
 function App() 
 {   
     // local
-    const API_BASE = "http://3.143.143.205:5001";
+    // const API_BASE = "http://localhost:5001";
 
+    // const API_BASE = "http://3.143.143.205:5001";
 
     // Local component state
     const [registerUsername, setRegisterUsername] = useState("");
@@ -28,7 +29,7 @@ function App()
     {
         event.preventDefault();
 
-        const response = await fetch("/register", 
+        const response = await fetch("/register",
         {
             method : "POST",
             headers : { "Content-Type" : "application/json" },
@@ -60,7 +61,7 @@ function App()
     {
         event.preventDefault();
 
-        const response = await fetch(API_BASE + "/login",
+        const response = await fetch("/login",
         {
             method : "POST",
             headers : { "Content-Type" : "application/json" },
@@ -102,7 +103,7 @@ function App()
     {
         event.preventDefault();
 
-        const response = await fetch(API_BASE + "/weather/" + weatherCity);
+        const response = await fetch("/weather/" + weatherCity);
         const data = await response.json();
 
         if (response.ok) 
